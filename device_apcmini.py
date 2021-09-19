@@ -3,6 +3,7 @@
 from src.modes.sequencer import Sequencer
 from src.modes.notes_pad import NotesPad
 from src.modes.mixer_transport import MixerTransport
+from src.modes.playlist_muter import PlaylistMuter
 import mixer
 import midi
 import device
@@ -11,12 +12,18 @@ import ui
 from src import framework
 from src import leds
 
-modes = [Sequencer(), NotesPad(), MixerTransport()]
+modes = [Sequencer(), NotesPad(), MixerTransport(), PlaylistMuter()]
 
-currentMode = modes[2]
+currentModeIndex = 3
+
+currentMode = modes[currentModeIndex]
+
+# default note is 72
 
 
 def OnNoteOn(event):
+    global currentModeIndex
+    global currentMode
     print('Midi note on:', event.data1, " ", event.data2)
     n = event.data1
     if(framework.isXYPad(n)):
@@ -35,7 +42,13 @@ def OnNoteOn(event):
         event.handled = currentMode.onControlXKeyDown(index, event)
 
     if(framework.isShift(n)):
-        print(f"Shift DOWN {str(index)}")
+        print(f"Shift DOWN {str(n)}")
+        currentModeIndex += 1
+        if currentModeIndex >= len(modes):
+            currentModeIndex = 0
+        currentMode.onDisable()
+        currentMode = modes[currentModeIndex]
+        currentMode.onEnable()
         event.handled = True
 
     # if event.data1 > 63 and event.data1 < 81 or event.data1 > 81 and event.data1 < 88:	#Check to see if the note is in the range used by the patch selector
@@ -68,7 +81,7 @@ def OnNoteOff(event):  # Tell FL what to do with note off data
         event.handled = currentMode.onControlXKeyUp(index, event)
 
     if(framework.isShift(n)):
-        print(f"Shift UP {str(index)}")
+        print(f"Shift UP {str(n)}")
         event.handled = True
 
 

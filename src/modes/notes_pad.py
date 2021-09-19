@@ -31,7 +31,9 @@ class NotesPad:
         return False
 
     def onPadKeyUp(self, x: int, y: int, originalEvent) -> bool:
-        return True
+        originalEvent.note += 24
+        originalEvent.velocity = int(255 * self.velocity)
+        return False
 
     def onControlXKeyDown(self, index: int, originalEvent) -> bool:
         if index == 2:
