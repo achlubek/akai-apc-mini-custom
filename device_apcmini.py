@@ -2,6 +2,7 @@
 
 from src.modes.sequencer import Sequencer
 from src.modes.notes_pad import NotesPad
+from src.modes.mixer_transport import MixerTransport
 import mixer
 import midi
 import device
@@ -10,9 +11,9 @@ import ui
 from src import framework
 from src import leds
 
-modes = [Sequencer(), NotesPad()]
+modes = [Sequencer(), NotesPad(), MixerTransport()]
 
-currentMode = modes[0]
+currentMode = modes[2]
 
 
 def OnNoteOn(event):
@@ -79,6 +80,7 @@ def OnControlChange(event):  # Let's define what FL will do when a slider moves
 
 
 def OnInit():
+    device.setHasMeters()
     currentMode.onEnable()
 
 
@@ -92,3 +94,7 @@ def OnRefresh(flags):
 
 def OnIdle():
     pass
+
+
+def OnUpdateMeters():
+    currentMode.onUpdateMeters()

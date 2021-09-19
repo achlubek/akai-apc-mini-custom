@@ -19,6 +19,9 @@ class NotesPad:
     def onDisable(self) -> None:
         print("Disabling NotesPad mode")
 
+    def onUpdateMeters(self) -> None:
+        pass
+
     def onRequestRefresh(self, flags) -> None:
         pass
 

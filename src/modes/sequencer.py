@@ -15,6 +15,9 @@ class Sequencer:
         print("Enabling Sequencer mode")
         self.refreshLeds()
 
+    def onUpdateMeters(self) -> None:
+        pass
+
     def refreshLeds(self):
         count = channels.channelCount()
         if count > 8:
