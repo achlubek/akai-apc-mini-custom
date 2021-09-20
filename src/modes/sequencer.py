@@ -28,6 +28,9 @@ class Sequencer:
                     leds.setXYPadColor(step, index, leds.COLOR_GREEN)
                 else:
                     leds.setXYPadColor(step, index, leds.COLOR_OFF)
+        for index in range(count, 8):
+            for step in range(0, 8):
+                leds.setXYPadColor(step, index, leds.COLOR_OFF)
         ui.crDisplayRect(self.xOffset * 8, 0, 8, 8, 1000)
         for xcontrolLed in range(0, 8):
             color = leds.COLOR_RED if xcontrolLed == self.xOffset else leds.COLOR_OFF
@@ -40,9 +43,11 @@ class Sequencer:
         self.refreshLeds()
 
     def onPadKeyDown(self, x: int, y: int, originalEvent) -> bool:
-        status = channels.getGridBit(y, x + self.xOffset * 8)
-        channels.setGridBit(y, x + self.xOffset * 8, 1 - status)
-        self.refreshLeds()
+        count = channels.channelCount()
+        if(y < count):
+            status = channels.getGridBit(y, x + self.xOffset * 8)
+            channels.setGridBit(y, x + self.xOffset * 8, 1 - status)
+            self.refreshLeds()
         return True
 
     def onPadKeyUp(self, x: int, y: int, originalEvent) -> bool:
