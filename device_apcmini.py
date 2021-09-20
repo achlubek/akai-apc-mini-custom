@@ -9,16 +9,23 @@ import midi
 import device
 import ui
 
+import transport
+
 from src import framework
 from src import leds
 
 modes = [Sequencer(), NotesPad(), MixerTransport(), PlaylistMuter()]
 
-currentModeIndex = 3
+currentModeIndex = 2
 
 currentMode = modes[currentModeIndex]
 
 # default note is 72
+
+mixerWindowIndex = 0
+channelRackWindowIndex = 1
+playlistWindowIndex = 2
+pianoRollWindowIndex = 3
 
 
 def OnNoteOn(event):
@@ -39,7 +46,25 @@ def OnNoteOn(event):
     if(framework.isYControl(n)):
         index = framework.getIndexForYControl(n)
         print(f"Y DOWN Control {str(index)}")
-        event.handled = currentMode.onControlXKeyDown(index, event)
+        if index == 0:
+            transport.start()
+        if index == 1:
+            transport.stop()
+        if index == 2:
+            transport.record()
+        if index == 3:
+            transport.setLoopMode()
+
+        if index == 4:
+            ui.showWindow(mixerWindowIndex)
+        if index == 5:
+            ui.showWindow(channelRackWindowIndex)
+        if index == 6:
+            ui.showWindow(playlistWindowIndex)
+        if index == 7:
+            ui.showWindow(pianoRollWindowIndex)
+
+        event.handled = True
 
     if(framework.isShift(n)):
         print(f"Shift DOWN {str(n)}")
@@ -51,19 +76,8 @@ def OnNoteOn(event):
         currentMode.onEnable()
         event.handled = True
 
-    # if event.data1 > 63 and event.data1 < 81 or event.data1 > 81 and event.data1 < 88:	#Check to see if the note is in the range used by the patch selector
-    #     event.handled = True #Start by telling FL we are dealing with this note to stop it from playing a tone
-    #     setPatchBank(event.data1) #If it is, pass it through to the function that selects patches
-    #     ui.setHintMsg("Bank " + str(selectedBank) + " selected (" + str(((selectedBank-1)*9)) + "-" + str(((selectedBank-1)*9)+8) + ")")
-    # elif event.data1 == 98:
-    #     ui.setHintMsg("LEDs Turned off")
-    #     clearAllLEDs()
-    #     event.handled = True
-    # else:
-    #     event.handled = False #Allows you to continue to use the pads inside of the FPC if you want to
 
-
-def OnNoteOff(event):  # Tell FL what to do with note off data
+def OnNoteOff(event):
     n = event.data1
     if(framework.isXYPad(n)):
         coords = framework.getXYTopLeft00ForPad(n)
@@ -78,22 +92,40 @@ def OnNoteOff(event):  # Tell FL what to do with note off data
     if(framework.isYControl(n)):
         index = framework.getIndexForYControl(n)
         print(f"Y UP Control {str(index)}")
-        event.handled = currentMode.onControlXKeyUp(index, event)
+        event.handled = True
 
     if(framework.isShift(n)):
         print(f"Shift UP {str(n)}")
         event.handled = True
 
 
-def OnControlChange(event):  # Let's define what FL will do when a slider moves
-    # Not entirely sure what this does, (pretty certian it rate limits) but it seems to improve performance, so I'll leave it in.
+disableMeters = False
+
+
+def OnControlChange(event):
+    global disableMeters
+    disableMeters = True
     if (event.pmeFlags & midi.PME_System != 0):
-        # mixer.setTrackVolume(bankSliderToChan(selectedBank, event.data1), event.data2/127) #Set the mixer track volume according to the input
-        currentMode.onSlidersValueChange(event.data1 - 48, event.data2/127)
+        index = event.data1 - 48
+        data = event.data2/127
+        if index == 8:
+            mixer.setTrackVolume(0, data)
+        else:
+            currentMode.onSlidersValueChange(index, data)
 
 
 def OnInit():
     device.setHasMeters()
+    leds.clearAll()
+    leds.setYControlColor(0, leds.COLOR_GREEN)
+    leds.setYControlColor(1, leds.COLOR_GREEN)
+    leds.setYControlColor(2, leds.COLOR_GREEN)
+    leds.setYControlColor(3, leds.COLOR_OFF)
+
+    leds.setYControlColor(4, leds.COLOR_GREEN)
+    leds.setYControlColor(5, leds.COLOR_GREEN)
+    leds.setYControlColor(6, leds.COLOR_GREEN)
+    leds.setYControlColor(7, leds.COLOR_GREEN)
     currentMode.onEnable()
 
 
@@ -109,5 +141,59 @@ def OnIdle():
     pass
 
 
+pwm = 0
+
+
 def OnUpdateMeters():
-    currentMode.onUpdateMeters()
+    global pwm
+    global disableMeters
+    if not disableMeters:
+        pwm += 1
+        currentMode.onUpdateMeters(pwm)
+        if transport.getLoopMode() == 1:
+            leds.setYControlColor(3, leds.COLOR_GREEN)
+        else:
+            leds.setYControlColor(3, leds.COLOR_OFF)
+
+        if transport.isRecording():
+            if pwm % 30 < 15:
+                leds.setYControlColor(2, leds.COLOR_GREEN)
+            else:
+                leds.setYControlColor(2, leds.COLOR_OFF)
+        else:
+            leds.setYControlColor(2, leds.COLOR_GREEN)
+
+        if transport.isPlaying():
+            if pwm % 30 < 15:
+                leds.setYControlColor(0, leds.COLOR_GREEN)
+                leds.setYControlColor(1, leds.COLOR_OFF)
+            else:
+                leds.setYControlColor(0, leds.COLOR_OFF)
+                leds.setYControlColor(1, leds.COLOR_GREEN)
+        else:
+            leds.setYControlColor(0, leds.COLOR_GREEN)
+            leds.setYControlColor(1, leds.COLOR_OFF)
+
+        if ui.getFocused(mixerWindowIndex):
+            leds.setYControlColor(4, leds.COLOR_GREEN)
+        else:
+            leds.setYControlColor(4, leds.COLOR_OFF)
+
+        if ui.getFocused(channelRackWindowIndex):
+            leds.setYControlColor(5, leds.COLOR_GREEN)
+        else:
+            leds.setYControlColor(5, leds.COLOR_OFF)
+
+        if ui.getFocused(playlistWindowIndex):
+            leds.setYControlColor(6, leds.COLOR_GREEN)
+        else:
+            leds.setYControlColor(6, leds.COLOR_OFF)
+
+        if ui.getFocused(pianoRollWindowIndex):
+            leds.setYControlColor(7, leds.COLOR_GREEN)
+        else:
+            leds.setYControlColor(7, leds.COLOR_OFF)
+
+        if pwm > 1000000:
+            pwm = 0
+    disableMeters = False

@@ -1,5 +1,4 @@
 from .. import leds
-import device
 import channels
 import ui
 
@@ -15,7 +14,7 @@ class Sequencer:
         print("Enabling Sequencer mode")
         self.refreshLeds()
 
-    def onUpdateMeters(self) -> None:
+    def onUpdateMeters(self, pwm) -> None:
         pass
 
     def refreshLeds(self):
@@ -25,12 +24,11 @@ class Sequencer:
         for index in range(0, count):
             for step in range(0, 8):
                 status = channels.getGridBit(index, step + self.xOffset * 8)
-                print(status)
                 if status > 0:
                     leds.setXYPadColor(step, index, leds.COLOR_GREEN)
                 else:
                     leds.setXYPadColor(step, index, leds.COLOR_OFF)
-        ui.crDisplayRect(self.xOffset * 8, 0, self.xOffset * 8 + 8, 8, 1000)
+        ui.crDisplayRect(self.xOffset * 8, 0, 8, 8, 1000)
         for xcontrolLed in range(0, 8):
             color = leds.COLOR_RED if xcontrolLed == self.xOffset else leds.COLOR_OFF
             leds.setXControlColor(xcontrolLed, color)
@@ -39,7 +37,6 @@ class Sequencer:
         print("Disabling Sequencer mode")
 
     def onRequestRefresh(self, flags) -> None:
-        print("REFRESH")
         self.refreshLeds()
 
     def onPadKeyDown(self, x: int, y: int, originalEvent) -> bool:
@@ -57,12 +54,6 @@ class Sequencer:
         return True
 
     def onControlXKeyUp(self, index: int, originalEvent) -> bool:
-        return True
-
-    def onControlYKeyDown(self, index: int, originalEvent) -> bool:
-        return True
-
-    def onControlYKeyUp(self, index: int, originalEvent) -> bool:
         return True
 
     def onSlidersValueChange(self, index: int, value) -> None:

@@ -19,7 +19,7 @@ class NotesPad:
     def onDisable(self) -> None:
         print("Disabling NotesPad mode")
 
-    def onUpdateMeters(self) -> None:
+    def onUpdateMeters(self, pwm) -> None:
         pass
 
     def onRequestRefresh(self, flags) -> None:
@@ -28,11 +28,13 @@ class NotesPad:
     def onPadKeyDown(self, x: int, y: int, originalEvent) -> bool:
         originalEvent.note += 24
         originalEvent.velocity = int(255 * self.velocity)
+        leds.setXYPadColor(x, y, leds.COLOR_GREEN)
         return False
 
     def onPadKeyUp(self, x: int, y: int, originalEvent) -> bool:
         originalEvent.note += 24
         originalEvent.velocity = int(255 * self.velocity)
+        leds.setXYPadColor(x, y, leds.COLOR_OFF)
         return False
 
     def onControlXKeyDown(self, index: int, originalEvent) -> bool:
@@ -57,12 +59,6 @@ class NotesPad:
         return True
 
     def onControlXKeyUp(self, index: int, originalEvent) -> bool:
-        return True
-
-    def onControlYKeyDown(self, index: int, originalEvent) -> bool:
-        return True
-
-    def onControlYKeyUp(self, index: int, originalEvent) -> bool:
         return True
 
     def onSlidersValueChange(self, index: int, value) -> None:
