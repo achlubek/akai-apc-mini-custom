@@ -1,4 +1,5 @@
 from .. import leds
+import mixer
 import playlist
 
 
@@ -14,6 +15,7 @@ class PlaylistMuter:
     def onEnable(self) -> None:
         print("Enabling PlaylistMuter mode")
         leds.clearAll()
+        leds.setXControlColor(self.xOffset, leds.COLOR_RED_FLASHING)
 
     def onUpdateMeters(self, pwm) -> None:
         self.updateMuteLeds()
@@ -74,10 +76,13 @@ class PlaylistMuter:
         return True
 
     def onControlXKeyDown(self, index: int, originalEvent) -> bool:
+        leds.setXControlColor(self.xOffset, leds.COLOR_OFF)
+        self.xOffset = index
+        leds.setXControlColor(self.xOffset, leds.COLOR_RED)
         return True
 
     def onControlXKeyUp(self, index: int, originalEvent) -> bool:
         return True
 
     def onSlidersValueChange(self, index: int, value) -> None:
-        pass
+        mixer.setTrackVolume(index + 1 + 8 * self.xOffset, value)

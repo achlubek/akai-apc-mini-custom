@@ -8,10 +8,20 @@ COLOR_GREEN_FLASHING = 2
 COLOR_YELLOW = 5
 COLOR_YELLOW_FLASHING = 6
 
+ledsStateMap = [-1] * 90
+
+
+def setLed(index: int, color: int) -> None:
+    global ledsStateMap
+    state = ledsStateMap[index]
+    if state != color:
+        device.midiOutMsg(0x90 + (index << 8) + (color << 16))
+        ledsStateMap[index] = color
+
 
 def clearAll():
     for index in range(0, 90):
-        device.midiOutMsg(0x90 + (index << 8) + (0x00 << 16))
+        setLed(index, COLOR_OFF)
 
 
 def getNoteForXYPad(x: int, y: int) -> int:
@@ -19,12 +29,12 @@ def getNoteForXYPad(x: int, y: int) -> int:
 
 
 def setXYPadColor(x: int, y: int, color: int) -> None:
-    device.midiOutMsg(0x90 + (getNoteForXYPad(x, y) << 8) + (color << 16))
+    setLed(getNoteForXYPad(x, y), color)
 
 
 def setXControlColor(index: int, color: int) -> None:
-    device.midiOutMsg(0x90 + ((index + 64) << 8) + (color << 16))
+    setLed(index + 64, color)
 
 
 def setYControlColor(index: int, color: int) -> None:
-    device.midiOutMsg(0x90 + ((index + 82) << 8) + (color << 16))
+    setLed(index + 82, color)

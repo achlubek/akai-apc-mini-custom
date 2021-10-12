@@ -12,6 +12,7 @@ class MixerTransport:
     def onEnable(self) -> None:
         print("Enabling MixerTransport mode")
         leds.clearAll()
+        leds.setXControlColor(self.xOffset, leds.COLOR_RED_FLASHING)
 
     def onUpdateMeters(self, pwm) -> None:
         for x in range(0, 8):
@@ -39,7 +40,9 @@ class MixerTransport:
         return True
 
     def onControlXKeyDown(self, index: int, originalEvent) -> bool:
+        leds.setXControlColor(self.xOffset, leds.COLOR_OFF)
         self.xOffset = index
+        leds.setXControlColor(self.xOffset, leds.COLOR_RED)
         return True
 
     def onControlXKeyUp(self, index: int, originalEvent) -> bool:

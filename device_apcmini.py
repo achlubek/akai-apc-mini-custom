@@ -131,6 +131,7 @@ def OnInit():
 
 def OnDeInit():
     currentMode.onDisable()
+    leds.clearAll()
 
 
 def OnRefresh(flags):
